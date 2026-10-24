@@ -388,7 +388,7 @@ export default function TodayDashboard({ activeSheet, setActiveSheet }) {
           ))}
 
           {/* E. Evening Wind-Down & Hobbies Slot (Night Window) */}
-          {activeTimeWindow === "Night" && (
+          {activeTimeWindow === "Night" && state.windDownSlot?.title && (
             <div className="p-2.5 rounded-2xl bg-plum-100/80 border border-plum-500/30 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 rounded-xl bg-plum-600 text-white">

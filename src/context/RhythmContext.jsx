@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { INITIAL_RHYTHM_STATE } from "../utils/initialData";
 import { formatDateKey } from "../utils/cycleEngine";
 
-const STORAGE_KEY = "rhythm_app_state_v1";
+const STORAGE_KEY = "rhythm_app_state_v2";
 const RhythmContext = createContext(null);
 
 export function RhythmProvider({ children }) {
