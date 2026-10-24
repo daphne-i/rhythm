@@ -1,0 +1,233 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    @apply antialiased transition-colors duration-300;
+  }
+}
+
+/* =========================================================================
+   UNIVERSAL THEME ENGINE (Controls Background, Header, Cards, Pills & Text)
+========================================================================= */
+
+/* 1. TERRACOTTA STUDIO (Warm Parchment, Espresso & Rust) */
+:root,
+[data-theme="terracotta"] {
+  --app-outer: #16110E;
+  --app-canvas: #F5EDE0;
+  --app-header: linear-gradient(145deg, #2B1F1A 0%, #1C1410 100%);
+  --app-card: #FFFFFF;
+  --app-card-sub: #FAF6F0;
+  --app-pill-track: #E6D8C5;
+  --app-text-main: #231A16;
+  --app-text-muted: #6E564B;
+  --app-accent: #C85A32;
+  --app-accent-soft: #FCECE6;
+  --app-secondary: #4A5D3F;
+  --app-highlight: #D98A2B;
+  --app-border: rgba(35, 26, 22, 0.1);
+
+  --grad-ritual: linear-gradient(135deg, #3A2820 0%, #211612 100%);
+  --grad-meal: linear-gradient(135deg, #C85A32 0%, #963A19 100%);
+  --grad-hair: linear-gradient(135deg, #1F5C5C 0%, #123B3B 100%);
+  --grad-night: linear-gradient(135deg, #6B3654 0%, #421D32 100%);
+}
+
+/* 2. MATCHA & SAGE LINEN (Bright Botanical Mint, Sage & Golden Ochre) */
+[data-theme="forest"] {
+  --app-outer: #112218;
+  --app-canvas: #E1EFE4;
+  --app-header: linear-gradient(145deg, #1E4631 0%, #132E20 100%);
+  --app-card: #F9FCFA;
+  --app-card-sub: #EDF6EF;
+  --app-pill-track: #C8E0CE;
+  --app-text-main: #142E20;
+  --app-text-muted: #436953;
+  --app-accent: #2E7D52;
+  --app-accent-soft: #D7EFE0;
+  --app-secondary: #B8732A;
+  --app-highlight: #E09F3E;
+  --app-border: rgba(20, 46, 32, 0.12);
+
+  --grad-ritual: linear-gradient(135deg, #27593E 0%, #173826 100%);
+  --grad-meal: linear-gradient(135deg, #C97A2B 0%, #965515 100%);
+  --grad-hair: linear-gradient(135deg, #236B7A 0%, #14444F 100%);
+  --grad-night: linear-gradient(135deg, #3D5A45 0%, #223628 100%);
+}
+
+/* 3. SPICED WINE & BLUSH (Rosy-Blush Canvas, Mulberry & Berry) */
+[data-theme="berry"] {
+  --app-outer: #210E18;
+  --app-canvas: #F5DCE6;
+  --app-header: linear-gradient(145deg, #4A152F 0%, #2E0B1C 100%);
+  --app-card: #FFF9FB;
+  --app-card-sub: #FCEEF4;
+  --app-pill-track: #E8C3D2;
+  --app-text-main: #331021;
+  --app-text-muted: #7A425D;
+  --app-accent: #B8295B;
+  --app-accent-soft: #FADCE6;
+  --app-secondary: #6E3B8C;
+  --app-highlight: #E58F35;
+  --app-border: rgba(51, 16, 33, 0.12);
+
+  --grad-ritual: linear-gradient(135deg, #631D40 0%, #3B0E24 100%);
+  --grad-meal: linear-gradient(135deg, #C43162 0%, #8C193F 100%);
+  --grad-hair: linear-gradient(135deg, #8F3D78 0%, #571D47 100%);
+  --grad-night: linear-gradient(135deg, #4D1E66 0%, #2B0D3B 100%);
+}
+
+/* 4. NORDIC MIST & COPPER (Cool Ice-Blue Canvas, Deep Navy & Copper) */
+[data-theme="midnight"] {
+  --app-outer: #0B1521;
+  --app-canvas: #DCE9F5;
+  --app-header: linear-gradient(145deg, #162B45 0%, #0D1B2E 100%);
+  --app-card: #FBFDFF;
+  --app-card-sub: #EEF5FC;
+  --app-pill-track: #C3D8EC;
+  --app-text-main: #122438;
+  --app-text-muted: #466382;
+  --app-accent: #D1602A;
+  --app-accent-soft: #FCE8DE;
+  --app-secondary: #22786B;
+  --app-highlight: #F0A23B;
+  --app-border: rgba(18, 36, 56, 0.12);
+
+  --grad-ritual: linear-gradient(135deg, #1E3A5C 0%, #102238 100%);
+  --grad-meal: linear-gradient(135deg, #D1602A 0%, #9E4114 100%);
+  --grad-hair: linear-gradient(135deg, #1B6CA8 0%, #0F436B 100%);
+  --grad-night: linear-gradient(135deg, #393E7A 0%, #1F224A 100%);
+}
+
+/* 5. VELVET NOCTURNE (True Cozy Dark Mode - Crisp Readable Light Text!) */
+[data-theme="nocturne"] {
+  --app-outer: #07060A;
+  --app-canvas: #13111C;
+  --app-header: linear-gradient(145deg, #221C33 0%, #171324 100%);
+  --app-card: #1F1A2E;
+  --app-card-sub: #2A233D;
+  --app-pill-track: #251F36;
+  --app-text-main: #F7F2FA;
+  --app-text-muted: #B8ADCC;
+  --app-accent: #E86F4A;
+  --app-accent-soft: #3D2426;
+  --app-secondary: #48A880;
+  --app-highlight: #F5B041;
+  --app-border: rgba(255, 255, 255, 0.12);
+
+  --grad-ritual: linear-gradient(135deg, #432C69 0%, #271842 100%);
+  --grad-meal: linear-gradient(135deg, #C75133 0%, #872E18 100%);
+  --grad-hair: linear-gradient(135deg, #1E6B7B 0%, #11424D 100%);
+  --grad-night: linear-gradient(135deg, #5E2750 0%, #38122E 100%);
+}
+
+/* =========================================================================
+   APPLY THEME VARIABLES DIRECTLY TO APP SURFACES & TEXT
+========================================================================= */
+
+/* 1. Main Canvas & Header */
+.bg-cream-100 {
+  background-color: var(--app-canvas) !important;
+}
+.bg-cream-50 {
+  background-color: var(--app-card-sub) !important;
+}
+.bg-cream-200,
+.bg-cream-200\/70,
+.bg-cream-200\/80,
+.bg-cream-200\/90 {
+  background-color: var(--app-pill-track) !important;
+}
+
+header.bg-espresso-900 {
+  background: var(--app-header) !important;
+}
+
+/* 2. Cards & Navigation Bar */
+.bg-white,
+.bg-white\/70,
+.bg-white\/75,
+.bg-white\/80,
+.bg-white\/85,
+.bg-white\/90 {
+  background-color: var(--app-card) !important;
+  border-color: var(--app-border) !important;
+}
+
+/* 3. Primary Accents (Selected Date Pill, Active Buttons, Active Tab) */
+.bg-terracotta-500 {
+  background-color: var(--app-accent) !important;
+}
+.text-terracotta-500,
+.text-terracotta-600 {
+  color: var(--app-accent) !important;
+}
+.border-terracotta-500 {
+  border-color: var(--app-accent) !important;
+}
+.bg-terracotta-100,
+.bg-terracotta-100\/70 {
+  background-color: var(--app-accent-soft) !important;
+}
+
+/* 4. Text Contrast (Fixes Invisible Text in Dark Mode!) */
+.text-espresso-900,
+.text-espresso-800 {
+  color: var(--app-text-main) !important;
+}
+.text-espresso-700,
+.text-espresso-700\/80,
+.text-espresso-700\/70,
+.text-espresso-700\/60 {
+  color: var(--app-text-muted) !important;
+}
+
+/* Dark Mode Specific Surface & Button Adjustments */
+[data-theme="nocturne"] .bg-espresso-900 {
+  background-color: #362C4F !important;
+  color: #FFFFFF !important;
+}
+[data-theme="nocturne"] .bg-amber-100\/60,
+[data-theme="nocturne"] .bg-amber-100\/70 {
+  background-color: #2E2538 !important;
+  border-color: rgba(245, 176, 65, 0.3) !important;
+}
+[data-theme="nocturne"] .bg-teal-100\/70 {
+  background-color: #1A333B !important;
+  border-color: rgba(72, 168, 128, 0.3) !important;
+}
+[data-theme="nocturne"] .bg-plum-100\/80,
+[data-theme="nocturne"] .bg-plum-100\/60 {
+  background-color: #2E1F3D !important;
+}
+[data-theme="nocturne"] input,
+[data-theme="nocturne"] select {
+  background-color: #151221 !important;
+  color: #F7F2FA !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+/* Bento Card Gradients */
+.bento-ritual-gradient {
+  background: var(--grad-ritual) !important;
+}
+.bento-meal-gradient {
+  background: var(--grad-meal) !important;
+}
+.bento-hair-wash {
+  background: var(--grad-hair) !important;
+}
+.bento-plum-night {
+  background: var(--grad-night) !important;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
