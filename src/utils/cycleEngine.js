@@ -84,7 +84,14 @@ export function resolveRoutineForDate(rule, targetDateStr, shelfItems, completed
   };
 }
 
-// 2. Resolve Today's Meals + Automatic Cross-Day Prep Alerts
+// Helper to safely normalize a meal slot into an array of dish IDs
+export function normalizeSlotArray(slotVal) {
+  if (!slotVal) return [];
+  if (Array.isArray(slotVal)) return slotVal.filter(Boolean);
+  return typeof slotVal === "string" && slotVal.trim() !== "" ? [slotVal] : [];
+}
+
+// 2. Resolve Today's Meals (Multi-Dish) + Automatic Cross-Day Prep Alerts
 export function resolveMealsAndPrepForDate(state, targetDateStr) {
   const todayWeekday = getWeekdayName(targetDateStr);
   const tomorrowDateStr = addDays(targetDateStr, 1);
@@ -93,47 +100,69 @@ export function resolveMealsAndPrepForDate(state, targetDateStr) {
   const todayPlanIds = state.weeklyMealPlan[todayWeekday] || {};
   const tomorrowPlanIds = state.weeklyMealPlan[tomorrowWeekday] || {};
 
-  const getDish = (id) =>
-    state.dishPantry[id] || { id, name: "Unplanned", emoji: "🍽️", prepRule: null };
+  const resolveSlotSummary = (slotVal) => {
+    const ids = normalizeSlotArray(slotVal);
+    const items = ids.map((id) => state.dishPantry[id]).filter(Boolean);
+
+    if (items.length === 0) {
+      return {
+        items: [],
+        name: "Unplanned",
+        emoji: "🍽️",
+        hasPrep: false
+      };
+    }
+
+    return {
+      items,
+      name: items.map((i) => i.name).join(" + "),
+      emoji: items.map((i) => i.emoji).join(""),
+      hasPrep: items.some((i) => Boolean(i.prepRule))
+    };
+  };
 
   const todayMeals = {
-    bfast: getDish(todayPlanIds.bfast),
-    lunch: getDish(todayPlanIds.lunch),
-    snack: getDish(todayPlanIds.snack),
-    dinner: getDish(todayPlanIds.dinner)
+    bfast: resolveSlotSummary(todayPlanIds.bfast),
+    lunch: resolveSlotSummary(todayPlanIds.lunch),
+    snack: resolveSlotSummary(todayPlanIds.snack),
+    dinner: resolveSlotSummary(todayPlanIds.dinner)
   };
 
   const tomorrowMeals = {
-    bfast: getDish(tomorrowPlanIds.bfast),
-    lunch: getDish(tomorrowPlanIds.lunch),
-    snack: getDish(tomorrowPlanIds.snack),
-    dinner: getDish(tomorrowPlanIds.dinner)
+    bfast: resolveSlotSummary(tomorrowPlanIds.bfast),
+    lunch: resolveSlotSummary(tomorrowPlanIds.lunch),
+    snack: resolveSlotSummary(tomorrowPlanIds.snack),
+    dinner: resolveSlotSummary(tomorrowPlanIds.dinner)
   };
 
-  // Morning Prep Alerts (for Today's meals that need "morning_of" prep)
+  // Morning Prep Alerts (checks ALL dishes in Today's meals for "morning_of" prep)
   const morningPrepAlerts = [];
-  Object.entries(todayMeals).forEach(([slot, dish]) => {
-    if (dish.prepRule && dish.prepRule.timing === "morning_of") {
-      morningPrepAlerts.push({
-        id: `prep_morn_${slot}_${dish.id}`,
-        text: dish.prepRule.text,
-        forDish: dish.name,
-        timeWindow: "Morning"
-      });
-    }
+  Object.entries(todayMeals).forEach(([slot, slotData]) => {
+    slotData.items.forEach((dish) => {
+      if (dish.prepRule && dish.prepRule.timing === "morning_of") {
+        morningPrepAlerts.push({
+          id: `prep_morn_${slot}_${dish.id}`,
+          text: dish.prepRule.text,
+          forDish: dish.name,
+          timeWindow: "Morning"
+        });
+      }
+    });
   });
 
-  // Night-Before Prep Alerts (inspects TOMORROW'S meals for "night_before" prep)
+  // Night-Before Prep Alerts (checks ALL dishes in TOMORROW'S meals for "night_before" prep)
   const nightPrepAlerts = [];
-  Object.entries(tomorrowMeals).forEach(([slot, dish]) => {
-    if (dish.prepRule && dish.prepRule.timing === "night_before") {
-      nightPrepAlerts.push({
-        id: `prep_night_${slot}_${dish.id}`,
-        text: dish.prepRule.text,
-        forDish: `Tomorrow's ${dish.name}`,
-        timeWindow: "Night"
-      });
-    }
+  Object.entries(tomorrowMeals).forEach(([slot, slotData]) => {
+    slotData.items.forEach((dish) => {
+      if (dish.prepRule && dish.prepRule.timing === "night_before") {
+        nightPrepAlerts.push({
+          id: `prep_night_${slot}_${dish.id}`,
+          text: dish.prepRule.text,
+          forDish: `Tomorrow's ${dish.name}`,
+          timeWindow: "Night"
+        });
+      }
+    });
   });
 
   return {

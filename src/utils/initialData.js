@@ -109,14 +109,15 @@ export const INITIAL_RHYTHM_STATE = {
   dishPantry: {},
 
   // 5. EMPTY WEEKLY MEAL PLAN
+  // 5. EMPTY WEEKLY MEAL PLAN (Arrays support multiple dishes per meal!)
   weeklyMealPlan: {
-    Mon: { bfast: "", lunch: "", snack: "", dinner: "" },
-    Tue: { bfast: "", lunch: "", snack: "", dinner: "" },
-    Wed: { bfast: "", lunch: "", snack: "", dinner: "" },
-    Thu: { bfast: "", lunch: "", snack: "", dinner: "" },
-    Fri: { bfast: "", lunch: "", snack: "", dinner: "" },
-    Sat: { bfast: "", lunch: "", snack: "", dinner: "" },
-    Sun: { bfast: "", lunch: "", snack: "", dinner: "" }
+    Mon: { bfast: [], lunch: [], snack: [], dinner: [] },
+    Tue: { bfast: [], lunch: [], snack: [], dinner: [] },
+    Wed: { bfast: [], lunch: [], snack: [], dinner: [] },
+    Thu: { bfast: [], lunch: [], snack: [], dinner: [] },
+    Fri: { bfast: [], lunch: [], snack: [], dinner: [] },
+    Sat: { bfast: [], lunch: [], snack: [], dinner: [] },
+    Sun: { bfast: [], lunch: [], snack: [], dinner: [] }
   },
 
   // 6. EMPTY MEDICATIONS

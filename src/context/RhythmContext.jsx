@@ -208,18 +208,6 @@ export function RhythmProvider({ children }) {
   };
 
   // 6. MEALS & PANTRY
-  const assignDishToSlot = (weekday, slotKey, dishId) => {
-    setState((prev) => ({
-      ...prev,
-      weeklyMealPlan: {
-        ...prev.weeklyMealPlan,
-        [weekday]: {
-          ...prev.weeklyMealPlan[weekday],
-          [slotKey]: dishId
-        }
-      }
-    }));
-  };
 
   const addDishToPantry = ({ name, emoji = "🍲", category = "main", prepTiming = "none", prepText = "" }) => {
     const id = `dish_${Date.now()}`;
@@ -294,22 +282,47 @@ export function RhythmProvider({ children }) {
     });
   };
 
-  // Delete a Dish from Pantry AND clear it from any Weekly Meal Plan slots
+// Toggle a Dish Chip in/out of a Day + Meal Slot array (Supports multiple items per meal!)
+  const assignDishToSlot = (weekday, slotKey, dishId) => {
+    setState((prev) => {
+      const currentSlotVal = prev.weeklyMealPlan[weekday]?.[slotKey];
+      const currentArr = Array.isArray(currentSlotVal)
+        ? currentSlotVal.filter(Boolean)
+        : currentSlotVal
+        ? [currentSlotVal]
+        : [];
+
+      const exists = currentArr.includes(dishId);
+      const updatedArr = exists
+        ? currentArr.filter((id) => id !== dishId)
+        : [...currentArr, dishId];
+
+      return {
+        ...prev,
+        weeklyMealPlan: {
+          ...prev.weeklyMealPlan,
+          [weekday]: {
+            ...prev.weeklyMealPlan[weekday],
+            [slotKey]: updatedArr
+          }
+        }
+      };
+    });
+  };
+
+  // Delete a Dish from Pantry AND remove it from any Weekly Meal Plan arrays
   const deleteDishFromPantry = (dishId) => {
     setState((prev) => {
       const updatedPantry = { ...prev.dishPantry };
       delete updatedPantry[dishId];
 
-      const remainingDishIds = Object.keys(updatedPantry);
-      const fallbackId = remainingDishIds[0] || "";
-
       const updatedWeeklyPlan = { ...prev.weeklyMealPlan };
       Object.keys(updatedWeeklyPlan).forEach((dayKey) => {
         const dayPlan = { ...updatedWeeklyPlan[dayKey] };
         ["bfast", "lunch", "snack", "dinner"].forEach((slot) => {
-          if (dayPlan[slot] === dishId) {
-            dayPlan[slot] = fallbackId;
-          }
+          const val = dayPlan[slot];
+          const arr = Array.isArray(val) ? val : val ? [val] : [];
+          dayPlan[slot] = arr.filter((id) => id !== dishId);
         });
         updatedWeeklyPlan[dayKey] = dayPlan;
       });

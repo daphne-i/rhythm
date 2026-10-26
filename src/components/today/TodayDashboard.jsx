@@ -69,7 +69,7 @@ export default function TodayDashboard({ activeSheet, setActiveSheet }) {
     resolvedFace.doneCount + resolvedHair.doneCount + resolvedBody.doneCount + resolvedMove.doneCount;
   const ritualPercent = totalRitualSteps > 0 ? Math.round((completedRitualSteps / totalRitualSteps) * 100) : 0;
 
-  // 2. Resolve Today's Meals & Cross-Day Prep
+  // 2. Resolve Today's Meals (Multi-Dish Aware) & Cross-Day Prep
   const mealInfo = resolveMealsAndPrepForDate(state, selectedDate);
   const activeMeal =
     activeTimeWindow === "Morning"
@@ -199,7 +199,7 @@ export default function TodayDashboard({ activeSheet, setActiveSheet }) {
               <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-black/20 text-cream-100">
                 {activeMeal.label}
               </span>
-              <span className="text-base">{activeMeal.dish.emoji}</span>
+              <span className="text-sm truncate max-w-[60px]">{activeMeal.dish.emoji}</span>
             </div>
 
             <h3 className="text-sm font-bold leading-snug line-clamp-2">
@@ -232,7 +232,9 @@ export default function TodayDashboard({ activeSheet, setActiveSheet }) {
               {activeTimeWindow} Flow & Anchors
             </h4>
           </div>
-        
+          <span className="text-[10px] font-semibold text-espresso-700/60">
+            Zero-Clutter View
+          </span>
         </div>
 
         {/* Dynamic Flow Cards */}
@@ -387,7 +389,7 @@ export default function TodayDashboard({ activeSheet, setActiveSheet }) {
             </div>
           ))}
 
-          {/* E. Evening Wind-Down & Hobbies Slot (Night Window) */}
+          {/* E. Evening Wind-Down & Hobbies Slot (Only appears in Night Window if title is set) */}
           {activeTimeWindow === "Night" && state.windDownSlot?.title && (
             <div className="p-2.5 rounded-2xl bg-plum-100/80 border border-plum-500/30 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -405,6 +407,17 @@ export default function TodayDashboard({ activeSheet, setActiveSheet }) {
               </div>
             </div>
           )}
+
+          {/* Empty State Hint if nothing is scheduled in this window yet */}
+          {windowMeds.length === 0 &&
+            windowTasks.length === 0 &&
+            (activeTimeWindow !== "Afternoon" || dueResets.length === 0) &&
+            (activeTimeWindow !== "Morning" || mealInfo.morningPrepAlerts.length === 0) &&
+            (activeTimeWindow !== "Night" || (mealInfo.nightPrepAlerts.length === 0 && !state.windDownSlot?.title)) && (
+              <div className="py-6 text-center text-xs text-espresso-700/60">
+                No tablets, prep alerts, or tasks in your {activeTimeWindow} flow yet.
+              </div>
+            )}
         </div>
 
         {/* Bottom Footer Hint inside Flow Box */}
@@ -461,58 +474,64 @@ export default function TodayDashboard({ activeSheet, setActiveSheet }) {
         </div>
 
         <div className="space-y-2">
-          {activeRoutine.steps.map((step, idx) => (
-            <div
-              key={step.stepLogKey}
-              className={`p-3 rounded-2xl border flex items-center justify-between transition ${
-                step.done
-                  ? "bg-olive-100/60 border-olive-500/30"
-                  : "bg-white border-espresso-900/10"
-              }`}
-            >
-              <button
-                onClick={() => toggleRitualStep(step.stepLogKey)}
-                className="flex items-center gap-3 flex-1 text-left"
+          {activeRoutine.steps.length === 0 ? (
+            <p className="text-xs text-center py-6 text-espresso-700/70">
+              No steps added to this cycle yet. Go to <strong>Cycles &amp; Rules</strong> to add your products!
+            </p>
+          ) : (
+            activeRoutine.steps.map((step, idx) => (
+              <div
+                key={step.stepLogKey}
+                className={`p-3 rounded-2xl border flex items-center justify-between transition ${
+                  step.done
+                    ? "bg-olive-100/60 border-olive-500/30"
+                    : "bg-white border-espresso-900/10"
+                }`}
               >
-                <span
-                  className={`w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center ${
-                    step.done
-                      ? "bg-olive-600 text-white"
-                      : "bg-cream-200 text-espresso-800"
-                  }`}
-                >
-                  {step.done ? "✓" : idx + 1}
-                </span>
-                <div>
-                  <p className={`text-sm font-bold ${step.done ? "line-through opacity-60" : "text-espresso-900"}`}>
-                    {step.name}
-                  </p>
-                  <p className="text-[11px] text-espresso-700/70">
-                    Step {idx + 1} of {activeRoutine.totalCount}
-                  </p>
-                </div>
-              </button>
-
-              {selectedRitualTab !== "move" && (
                 <button
-                  onClick={() => toggleLowStock(step.id)}
-                  className={`px-2.5 py-1.5 rounded-xl text-[11px] font-bold flex items-center gap-1 transition ${
-                    step.isLowStock
-                      ? "bg-terracotta-500 text-white"
-                      : "bg-cream-100 text-espresso-700 hover:bg-cream-200"
-                  }`}
+                  onClick={() => toggleRitualStep(step.stepLogKey)}
+                  className="flex items-center gap-3 flex-1 text-left"
                 >
-                  <ShoppingCart className="w-3 h-3" />
-                  <span>{step.isLowStock ? "Low" : "Stock OK"}</span>
+                  <span
+                    className={`w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center ${
+                      step.done
+                        ? "bg-olive-600 text-white"
+                        : "bg-cream-200 text-espresso-800"
+                    }`}
+                  >
+                    {step.done ? "✓" : idx + 1}
+                  </span>
+                  <div>
+                    <p className={`text-sm font-bold ${step.done ? "line-through opacity-60" : "text-espresso-900"}`}>
+                      {step.name}
+                    </p>
+                    <p className="text-[11px] text-espresso-700/70">
+                      Step {idx + 1} of {activeRoutine.totalCount}
+                    </p>
+                  </div>
                 </button>
-              )}
-            </div>
-          ))}
+
+                {selectedRitualTab !== "move" && (
+                  <button
+                    onClick={() => toggleLowStock(step.id)}
+                    className={`px-2.5 py-1.5 rounded-xl text-[11px] font-bold flex items-center gap-1 transition ${
+                      step.isLowStock
+                        ? "bg-terracotta-500 text-white"
+                        : "bg-cream-100 text-espresso-700 hover:bg-cream-200"
+                    }`}
+                  >
+                    <ShoppingCart className="w-3 h-3" />
+                    <span>{step.isLowStock ? "Low" : "Stock OK"}</span>
+                  </button>
+                )}
+              </div>
+            ))
+          )}
         </div>
       </BottomSheet>
 
       {/* =========================================================
-          SLIDE-UP BOTTOM SHEET 2: TODAY'S 4-QUADRANT MEAL PLATE
+          SLIDE-UP BOTTOM SHEET 2: TODAY'S 4-QUADRANT MEAL PLATE (Multi-Dish Aware)
       ========================================================= */}
       <BottomSheet
         isOpen={activeSheet === "meals"}
@@ -524,10 +543,10 @@ export default function TodayDashboard({ activeSheet, setActiveSheet }) {
       >
         <div className="grid grid-cols-2 gap-2.5">
           {[
-            { key: "bfast", label: "🌅 Breakfast", dish: mealInfo.todayMeals.bfast },
-            { key: "lunch", label: "☀️ Lunch", dish: mealInfo.todayMeals.lunch },
-            { key: "snack", label: "☕ Snacks", dish: mealInfo.todayMeals.snack },
-            { key: "dinner", label: "🌙 Dinner", dish: mealInfo.todayMeals.dinner }
+            { key: "bfast", label: "🌅 Breakfast", slotData: mealInfo.todayMeals.bfast },
+            { key: "lunch", label: "☀️ Lunch", slotData: mealInfo.todayMeals.lunch },
+            { key: "snack", label: "☕ Snacks", slotData: mealInfo.todayMeals.snack },
+            { key: "dinner", label: "🌙 Dinner", slotData: mealInfo.todayMeals.dinner }
           ].map((slot) => (
             <div
               key={slot.key}
@@ -536,12 +555,20 @@ export default function TodayDashboard({ activeSheet, setActiveSheet }) {
               <span className="text-[10px] font-bold uppercase text-terracotta-600">
                 {slot.label}
               </span>
-              <div className="mt-1 flex items-center gap-1.5">
-                <span className="text-lg">{slot.dish.emoji}</span>
-                <p className="text-xs font-bold text-espresso-900 leading-snug">
-                  {slot.dish.name}
-                </p>
-              </div>
+              {slot.slotData.items && slot.slotData.items.length > 0 ? (
+                <div className="mt-1.5 space-y-1">
+                  {slot.slotData.items.map((item) => (
+                    <div key={item.id} className="flex items-center gap-1.5">
+                      <span className="text-sm shrink-0">{item.emoji}</span>
+                      <p className="text-xs font-bold text-espresso-900 leading-tight">
+                        {item.name}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-1.5 text-xs text-espresso-700/50 italic">Unplanned</p>
+              )}
             </div>
           ))}
         </div>
@@ -640,7 +667,6 @@ export default function TodayDashboard({ activeSheet, setActiveSheet }) {
             </button>
           </div>
 
-          {/* Choose which time window this task belongs to */}
           <div className="grid grid-cols-3 gap-1">
             {["Morning", "Afternoon", "Night"].map((w) => (
               <button

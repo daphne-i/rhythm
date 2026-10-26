@@ -3,9 +3,12 @@ import {
   Zap,
   LayoutGrid,
   Plus,
-  Trash2
+  Trash2,
+  X,
+  Check
 } from "lucide-react";
 import { useRhythm } from "../../context/RhythmContext";
+import { normalizeSlotArray } from "../../utils/cycleEngine";
 import BottomSheet from "../layout/BottomSheet";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -35,15 +38,17 @@ export default function MealPlanner() {
 
   const dayPlan = state.weeklyMealPlan[selectedDay] || {};
 
-  const getDish = (id) =>
-    state.dishPantry[id] || { id, name: "Tap chip below", emoji: "🍽️", prepRule: null };
+  // Helper to get array of resolved dish objects for any slot
+  const getSlotDishes = (slotVal) => {
+    const ids = normalizeSlotArray(slotVal);
+    return ids.map((id) => state.dishPantry[id]).filter(Boolean);
+  };
 
-  // Assign Dish + Auto-Advance cursor to next meal slot
+  const activeSlotIds = normalizeSlotArray(dayPlan[activeSlot]);
+
+  // Toggle Dish in/out of activeSlot (Stay on activeSlot so user can pick multiple items!)
   const handleSelectDishChip = (dishId) => {
     assignDishToSlot(selectedDay, activeSlot, dishId);
-    const slotOrder = ["bfast", "lunch", "snack", "dinner"];
-    const nextIdx = (slotOrder.indexOf(activeSlot) + 1) % slotOrder.length;
-    setActiveSlot(slotOrder[nextIdx]);
   };
 
   // Filter Saved Dish Chips
@@ -114,7 +119,11 @@ export default function MealPlanner() {
                     {dayKey}
                   </span>
                   {["bfast", "lunch", "snack", "dinner"].map((sKey) => {
-                    const dish = getDish(plan[sKey]);
+                    const dishes = getSlotDishes(plan[sKey]);
+                    const label =
+                      dishes.length === 0
+                        ? "—"
+                        : dishes.map((d) => `${d.emoji}${d.name}`).join(" + ");
                     return (
                       <button
                         key={sKey}
@@ -124,9 +133,10 @@ export default function MealPlanner() {
                           setIsGridView(false);
                         }}
                         className="p-1.5 rounded-xl bg-white border border-espresso-900/5 text-left hover:border-terracotta-500 transition truncate"
+                        title={label}
                       >
                         <div className="text-[10px] font-bold text-espresso-900 truncate">
-                          {dish.emoji} {dish.name}
+                          {label}
                         </div>
                       </button>
                     );
@@ -138,48 +148,66 @@ export default function MealPlanner() {
         </div>
       ) : (
         <>
-          {/* 2. ACTIVE DAY'S 2x2 PLATE (4-Tap Auto-Advance Target) */}
+          {/* 2. ACTIVE DAY'S 2x2 PLATE (Supports Multiple Items per Slot!) */}
           <div className="my-2.5 shrink-0">
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 gap-2">
               {SLOTS.map((slot) => {
-                const dish = getDish(dayPlan[slot.key]);
+                const dishes = getSlotDishes(dayPlan[slot.key]);
                 const isSelected = activeSlot === slot.key;
+                const hasPrep = dishes.some((d) => Boolean(d.prepRule));
+
                 return (
-                  <button
+                  <div
                     key={slot.key}
                     onClick={() => setActiveSlot(slot.key)}
-                    className={`p-3.5 rounded-2xl text-left transition relative overflow-hidden border-2 ${
+                    className={`p-2.5 rounded-2xl text-left transition relative overflow-hidden border-2 cursor-pointer min-h-[78px] flex flex-col justify-between ${
                       isSelected
-                        ? "bg-white border-terracotta-500 shadow-bento scale-[1.01]"
+                        ? "bg-white border-terracotta-500 shadow-bento"
                         : "bg-white/75 border-espresso-900/10 hover:bg-white"
                     }`}
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mb-1">
                       <span className="text-[10px] font-extrabold uppercase tracking-wider text-terracotta-600">
-                        {slot.label}
+                        {slot.label} {dishes.length > 0 && `(${dishes.length})`}
                       </span>
-                      {dish.prepRule && (
-                        <span
-                          className="text-[9px] px-1.5 py-0.2 rounded-full bg-amber-100 text-terracotta-600 font-bold flex items-center gap-0.5"
-                          title={dish.prepRule.text}
-                        >
+                      {hasPrep && (
+                        <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-amber-100 text-terracotta-600 font-bold flex items-center gap-0.5">
                           <Zap className="w-2.5 h-2.5" /> Prep
                         </span>
                       )}
                     </div>
-                    <div className="mt-1.5 flex items-center gap-1.5">
-                      <span className="text-base">{dish.emoji}</span>
-                      <p className="text-xs font-bold text-espresso-900 truncate">
-                        {dish.name}
+
+                    {/* Multi-Dish Pills inside Slot */}
+                    {dishes.length === 0 ? (
+                      <p className="text-[11px] text-espresso-700/50 font-medium italic my-auto">
+                        Tap chips below to add...
                       </p>
-                    </div>
-                  </button>
+                    ) : (
+                      <div className="flex flex-wrap gap-1 max-h-[52px] overflow-y-auto no-scrollbar">
+                        {dishes.map((d) => (
+                          <span
+                            key={d.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              assignDishToSlot(selectedDay, slot.key, d.id);
+                            }}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-cream-100 border border-espresso-900/10 text-[10px] font-bold text-espresso-900 hover:bg-terracotta-100 hover:text-terracotta-600 transition"
+                            title="Tap to remove from this meal"
+                          >
+                            <span>{d.emoji}</span>
+                            <span className="truncate max-w-[95px]">{d.name}</span>
+                            <X className="w-2.5 h-2.5 opacity-60 shrink-0" />
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
           </div>
 
-          {/* 3. SAVED DISH CHIP PANTRY (Now expands into the full lower space) */}
+          {/* 3. SAVED DISH CHIP PANTRY (Tap multiple chips to add/remove) */}
           <div className="flex-1 min-h-0 bg-white/85 border border-espresso-900/10 rounded-3xl p-3.5 shadow-bento flex flex-col justify-between overflow-hidden">
             <div className="flex items-center justify-between gap-1 mb-2 shrink-0">
               <div className="flex gap-1 overflow-x-auto no-scrollbar">
@@ -229,46 +257,53 @@ export default function MealPlanner() {
 
             {/* Tappable Dish Chips Grid */}
             <div className="flex flex-wrap gap-2 overflow-y-auto no-scrollbar content-start flex-1 min-h-0 py-1">
-              {filteredDishes.map((dish) => {
-                const isAssignedHere = dayPlan[activeSlot] === dish.id;
+              {filteredDishes.length === 0 ? (
+                <p className="text-xs text-espresso-700/60 text-center w-full py-8">
+                  Your Dish Pantry is empty. Tap <strong>+ Dish</strong> above to create your favorite meal chips!
+                </p>
+              ) : (
+                filteredDishes.map((dish) => {
+                  const isAssignedHere = activeSlotIds.includes(dish.id);
 
-                if (isDeletingDishes) {
+                  if (isDeletingDishes) {
+                    return (
+                      <button
+                        key={dish.id}
+                        onClick={() => deleteDishFromPantry(dish.id)}
+                        className="px-3 py-1.5 rounded-2xl text-xs font-bold flex items-center gap-1.5 bg-terracotta-100 text-terracotta-600 border border-terracotta-500/40 hover:bg-terracotta-500 hover:text-white transition"
+                        title="Tap to delete dish from pantry"
+                      >
+                        <span>{dish.emoji}</span>
+                        <span>{dish.name}</span>
+                        <span className="text-[10px] font-extrabold ml-0.5">✕</span>
+                      </button>
+                    );
+                  }
+
                   return (
                     <button
                       key={dish.id}
-                      onClick={() => deleteDishFromPantry(dish.id)}
-                      className="px-3 py-1.5 rounded-2xl text-xs font-bold flex items-center gap-1.5 bg-terracotta-100 text-terracotta-600 border border-terracotta-500/40 hover:bg-terracotta-500 hover:text-white transition"
-                      title="Tap to delete dish from pantry"
+                      onClick={() => handleSelectDishChip(dish.id)}
+                      className={`px-3 py-1.5 rounded-2xl text-xs font-bold flex items-center gap-1.5 transition border ${
+                        isAssignedHere
+                          ? "bg-olive-600 text-white border-olive-600 shadow-2xs"
+                          : "bg-cream-50 text-espresso-900 border-espresso-900/10 hover:border-terracotta-500"
+                      }`}
                     >
+                      {isAssignedHere && <Check className="w-3 h-3 shrink-0" />}
                       <span>{dish.emoji}</span>
                       <span>{dish.name}</span>
-                      <span className="text-[10px] font-extrabold ml-0.5">✕</span>
+                      {dish.prepRule && (
+                        <Zap
+                          className={`w-3 h-3 ${
+                            isAssignedHere ? "text-amber-100" : "text-terracotta-500"
+                          }`}
+                        />
+                      )}
                     </button>
                   );
-                }
-
-                return (
-                  <button
-                    key={dish.id}
-                    onClick={() => handleSelectDishChip(dish.id)}
-                    className={`px-3 py-1.5 rounded-2xl text-xs font-bold flex items-center gap-1.5 transition border ${
-                      isAssignedHere
-                        ? "bg-olive-600 text-white border-olive-600 shadow-2xs"
-                        : "bg-cream-50 text-espresso-900 border-espresso-900/10 hover:border-terracotta-500"
-                    }`}
-                  >
-                    <span>{dish.emoji}</span>
-                    <span>{dish.name}</span>
-                    {dish.prepRule && (
-                      <Zap
-                        className={`w-3 h-3 ${
-                          isAssignedHere ? "text-amber-100" : "text-terracotta-500"
-                        }`}
-                      />
-                    )}
-                  </button>
-                );
-              })}
+                })
+              )}
             </div>
 
             <div className="pt-2 border-t border-espresso-900/5 text-[10px] text-espresso-700/70 flex justify-between shrink-0">
@@ -276,7 +311,7 @@ export default function MealPlanner() {
                 {isDeletingDishes ? (
                   <strong className="text-terracotta-600">Delete Mode: Tap any dish chip to remove it</strong>
                 ) : (
-                  <>Target: <strong className="text-terracotta-600 uppercase">{activeSlot}</strong> (Auto-advances on tap)</>
+                  <>Adding to: <strong className="text-terracotta-600 uppercase">{activeSlot}</strong> (Tap multiple chips!)</>
                 )}
               </span>
               <span>⚡ = Syncs prep to Today Flow</span>
@@ -384,7 +419,7 @@ export default function MealPlanner() {
             }}
             className="w-full py-2.5 rounded-2xl bg-espresso-900 text-cream-50 text-xs font-bold shadow-md"
           >
-            Save to Pantry & Assign to {selectedDay}
+            Save to Pantry & Add to {selectedDay}
           </button>
         </div>
       </BottomSheet>
